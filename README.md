@@ -1,4 +1,6 @@
 # dlhiddensym
+[![test](https://github.com/orisano/dlhiddensym/actions/workflows/test.yml/badge.svg)](https://github.com/orisano/dlhiddensym/actions/workflows/test.yml)
+
 dlhiddensym is a library that lookup hidden symbols in the dynamic link library.
 
 ## Installation
