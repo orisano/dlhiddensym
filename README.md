@@ -1,6 +1,11 @@
 # dlhiddensym
 dlhiddensym is a library that lookup hidden symbols in the dynamic link library.
 
+## Installation
+```bash
+curl -SsLO https://raw.githubusercontent.com/orisano/dlhiddensym/main/dlhiddensym.h
+```
+
 ## How to use
 ```c
 #include "dlhiddensym.h"
