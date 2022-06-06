@@ -112,13 +112,13 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
     uint16_t e_shentsize;
     uint16_t e_shnum;
     uint16_t e_shstrndx;
-  } *ehdr = (void *)addr;
+  } *ehdr = addr;
   void *shtable = (char *)addr + ehdr->e_shoff;
-  Elf64_Shdr *shstrh = (Elf64_Shdr *)((char *)shtable + (ehdr->e_shstrndx * ehdr->e_shentsize));
+  Elf64_Shdr *shstrh = (void *)((char *)shtable + (ehdr->e_shstrndx * ehdr->e_shentsize));
   char *shstr = (char *)addr + shstrh->sh_offset;
   Elf64_Shdr *symtabh = NULL;
   for (int i = 0; i < ehdr->e_shnum; i++) {
-    Elf64_Shdr *h = (Elf64_Shdr *)((char *)shtable + (i * ehdr->e_shentsize));
+    Elf64_Shdr *h = (void *)((char *)shtable + (i * ehdr->e_shentsize));
     if (h->sh_type == SHT_SYMTAB && strcmp(shstr + h->sh_name, ".symtab") == 0) {
       symtabh = h;
       break;
@@ -126,7 +126,7 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
   }
   int found = 0;
   if (symtabh != NULL) {
-    Elf64_Shdr *strtabh = (Elf64_Shdr *)((char *)shtable + (symtabh->sh_link * ehdr->e_shentsize));
+    Elf64_Shdr *strtabh = (void *)((char *)shtable + (symtabh->sh_link * ehdr->e_shentsize));
     char *strtab = (char *)addr + strtabh->sh_offset;
     void *symtab = (char *)addr + symtabh->sh_offset;
     for (uint64_t sym_offset = 0; sym_offset < symtabh->sh_size; sym_offset += symtabh->sh_entsize) {
