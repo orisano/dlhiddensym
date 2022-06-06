@@ -92,7 +92,7 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
     return 0;
   }
   off_t length = lseek(fd, 0, SEEK_END);
-  void *addr = mmap(NULL, length, PROT_READ, MAP_PRIVATE, fd, 0);
+  char *addr = mmap(NULL, length, PROT_READ, MAP_PRIVATE, fd, 0);
   close(fd);
   if (addr == MAP_FAILED) {
     return 0;
@@ -112,10 +112,10 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
     uint16_t e_shentsize;
     uint16_t e_shnum;
     uint16_t e_shstrndx;
-  } *ehdr = addr;
-  void *shtable = addr + ehdr->e_shoff;
+  } *ehdr = (void *)addr;
+  char *shtable = addr + ehdr->e_shoff;
   Elf64_Shdr *shstrh = (Elf64_Shdr *)(shtable + (ehdr->e_shstrndx * ehdr->e_shentsize));
-  char *shstr = (char *)(addr + shstrh->sh_offset);
+  char *shstr = addr + shstrh->sh_offset;
   Elf64_Shdr *symtabh = NULL;
   for (int i = 0; i < ehdr->e_shnum; i++) {
     Elf64_Shdr *h = (Elf64_Shdr *)(shtable + (i * ehdr->e_shentsize));
@@ -127,8 +127,8 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
   int found = 0;
   if (symtabh != NULL) {
     Elf64_Shdr *strtabh = (Elf64_Shdr *)(shtable + (symtabh->sh_link * ehdr->e_shentsize));
-    char *strtab = (char *)(addr + strtabh->sh_offset);
-    void *symtab = addr + symtabh->sh_offset;
+    char *strtab = addr + strtabh->sh_offset;
+    char *symtab = addr + symtabh->sh_offset;
     for (uint64_t sym_offset = 0; sym_offset < symtabh->sh_size; sym_offset += symtabh->sh_entsize) {
       struct {
         uint32_t st_name;
@@ -137,7 +137,7 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
         uint16_t st_shndx;
         uint64_t st_value;
         uint64_t st_size;
-      } *sym = symtab + sym_offset;
+      } *sym = (void *)(symtab + sym_offset);
       if (sym->st_info == STT_FUNC && strcmp(strtab + sym->st_name, symbol) == 0) {
         *dst = sym->st_value;
         found = 1;
@@ -158,5 +158,5 @@ void *dlhiddensym(const char *filename, const char *symbol) {
   if (lookup_symbol(&offset, m.pathname, symbol) == 0) {
     return NULL;
   }
-  return (void *)strtoull(m.begin, NULL, 16) + (offset - strtoull(m.offset, NULL, 16));
+  return (char *)strtoull(m.begin, NULL, 16) + (offset - strtoull(m.offset, NULL, 16));
 }
