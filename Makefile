@@ -1,4 +1,7 @@
 .PHONY: test
+
+CFLAGS := -Wall -Wextra -Wpointer-arith
+
 test: bin/dlhiddensym_test
 	$<
 
@@ -12,5 +15,5 @@ clean:
 
 bin/dlhiddensym_test: dlhiddensym_test.c dlhiddensym.h
 	@mkdir -p ./bin
-	$(CC) -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $<
 
