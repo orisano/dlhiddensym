@@ -92,7 +92,7 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
     return 0;
   }
   off_t length = lseek(fd, 0, SEEK_END);
-  char *addr = mmap(NULL, length, PROT_READ, MAP_PRIVATE, fd, 0);
+  void *addr = mmap(NULL, length, PROT_READ, MAP_PRIVATE, fd, 0);
   close(fd);
   if (addr == MAP_FAILED) {
     return 0;
@@ -113,12 +113,12 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
     uint16_t e_shnum;
     uint16_t e_shstrndx;
   } *ehdr = (void *)addr;
-  char *shtable = addr + ehdr->e_shoff;
-  Elf64_Shdr *shstrh = (Elf64_Shdr *)(shtable + (ehdr->e_shstrndx * ehdr->e_shentsize));
-  char *shstr = addr + shstrh->sh_offset;
+  void *shtable = (char *)addr + ehdr->e_shoff;
+  Elf64_Shdr *shstrh = (Elf64_Shdr *)((char *)shtable + (ehdr->e_shstrndx * ehdr->e_shentsize));
+  char *shstr = (char *)addr + shstrh->sh_offset;
   Elf64_Shdr *symtabh = NULL;
   for (int i = 0; i < ehdr->e_shnum; i++) {
-    Elf64_Shdr *h = (Elf64_Shdr *)(shtable + (i * ehdr->e_shentsize));
+    Elf64_Shdr *h = (Elf64_Shdr *)((char *)shtable + (i * ehdr->e_shentsize));
     if (h->sh_type == SHT_SYMTAB && strcmp(shstr + h->sh_name, ".symtab") == 0) {
       symtabh = h;
       break;
@@ -126,9 +126,9 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
   }
   int found = 0;
   if (symtabh != NULL) {
-    Elf64_Shdr *strtabh = (Elf64_Shdr *)(shtable + (symtabh->sh_link * ehdr->e_shentsize));
-    char *strtab = addr + strtabh->sh_offset;
-    char *symtab = addr + symtabh->sh_offset;
+    Elf64_Shdr *strtabh = (Elf64_Shdr *)((char *)shtable + (symtabh->sh_link * ehdr->e_shentsize));
+    char *strtab = (char *)addr + strtabh->sh_offset;
+    void *symtab = (char *)addr + symtabh->sh_offset;
     for (uint64_t sym_offset = 0; sym_offset < symtabh->sh_size; sym_offset += symtabh->sh_entsize) {
       struct {
         uint32_t st_name;
@@ -137,7 +137,7 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
         uint16_t st_shndx;
         uint64_t st_value;
         uint64_t st_size;
-      } *sym = (void *)(symtab + sym_offset);
+      } *sym = (void *)((char *)symtab + sym_offset);
       if (sym->st_info == STT_FUNC && strcmp(strtab + sym->st_name, symbol) == 0) {
         *dst = sym->st_value;
         found = 1;
