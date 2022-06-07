@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-typedef struct {
+typedef struct memory_map_t {
   char *begin;
   char *end;
   char *perms;
@@ -30,9 +30,9 @@ typedef struct {
   char *inode;
   char *pathname;
   char _buf[8192];
-} memory_map;
+} memory_map_t;
 
-int lookup_memory_map(memory_map *dst, const char *maps, const char *filename) {
+int lookup_memory_map(memory_map_t *dst, const char *maps, const char *filename) {
   FILE *f = fopen(maps, "r");
   if (f == NULL) {
     return 1;
@@ -150,7 +150,7 @@ int lookup_symbol(uint64_t *dst, const char *pathname, const char *symbol) {
 }
 
 void *dlhiddensym(const char *filename, const char *symbol) {
-  memory_map m;
+  memory_map_t m;
   if (lookup_memory_map(&m, "/proc/self/maps", filename) == 0) {
     return NULL;
   }

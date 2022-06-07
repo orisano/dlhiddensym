@@ -16,7 +16,7 @@
 #include <assert.h>
 
 int main() {
-  memory_map m;
+  memory_map_t m;
   assert(lookup_memory_map(&m, "testdata/maps", "libjvm.so") != 0);
   assert(strtoull(m.begin, NULL, 16) == 0x7f4f5d420000ull);
   assert(strtoull(m.offset, NULL, 16) == 0);
