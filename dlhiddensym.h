@@ -35,7 +35,7 @@ typedef struct memory_map_t {
 int lookup_memory_map(memory_map_t *dst, const char *maps, const char *filename) {
   FILE *f = fopen(maps, "r");
   if (f == NULL) {
-    return 1;
+    return 0;
   }
   memset(dst->_buf, 0, sizeof(dst->_buf));
   int filename_len = strlen(filename);
